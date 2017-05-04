@@ -4,6 +4,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,11 +17,21 @@ import android.widget.TextView;
 
 import com.example.iorda.musicplayer.R;
 import com.example.iorda.musicplayer.heper.Song;
+import com.example.iorda.musicplayer.heper.UrlAsync;
 import com.example.iorda.musicplayer.services.MusicService;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.net.*;
+import java.util.concurrent.ExecutionException;
 
-public class MusicControl extends AppCompatActivity implements MediaController.MediaPlayerControl{
+public class MusicControl extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
     private MusicService musicService;
     private boolean musicBound = false;
@@ -28,8 +40,17 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
     private TextView songTitle;
     private ArrayList<Song> songs;
 
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
     protected void onStart() {
-        super.onStart();
+        super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
         if (playIntent == null) {   //if there is no intent
             //create an intent between the activity_main activity and the service which plays music
             playIntent = new Intent(this, MusicService.class);
@@ -39,6 +60,9 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         }
         //Log.v("----setSongTitle", musicService.getSongPosition() + "");
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
     }
 
     @Override
@@ -46,7 +70,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_controller);
 
-        songs = (ArrayList<Song>)getIntent().getSerializableExtra("songs");
+        songs = (ArrayList<Song>) getIntent().getSerializableExtra("songs");
 
         Button nextButton = (Button) findViewById(R.id.nextButton);
         Button prevButton = (Button) findViewById(R.id.prevButton);
@@ -70,11 +94,10 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!paused) {
+                if (!paused) {
                     pause();
                     paused = true;
-                }
-                else {
+                } else {
                     start();
                     paused = false;
                 }
@@ -82,6 +105,9 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         });
 
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void setSongTitle() {
@@ -89,11 +115,76 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         Song currentSong = songs.get(musicService.getSongPosition());
         songTitle = (TextView) findViewById(R.id.songTitle);
         songTitle.setText(currentSong.getmArtistName() + " - " + currentSong.getmSongName());
+        String lyrics = null;
+        try {
+            lyrics = getLyrics(currentSong.getmArtistName(), currentSong.getmSongName());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Log.v("---setSongTitle", lyrics);
+
+
+
+
     }
+
+    public String getLyrics(String artist, String track) throws IOException {
+        final String API_KEY = "94315e4b34c8e989919c728d44ee76a8";
+        artist = artist.replaceAll(" ", "%20").toLowerCase();
+        track = track.replaceAll(" ", "%20").toLowerCase();
+
+        String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
+
+        UrlAsync urlAsync = new UrlAsync();
+        String response = null;
+        try {
+            response = urlAsync.execute(myUrl).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        Log.v("---getLyrics", response);
+        return response;
+
+    }
+
+    private class UrlAsync extends AsyncTask<String, Void, String> {
+
+        private Exception exception;
+        private String input = null;
+
+        protected String doInBackground(String... url) {
+            try {
+
+                Log.v("---ASYNC---", "It's doing !" + url[0]);
+
+                URL musix = new URL(url[0]);
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(
+                                musix.openStream()));
+
+                input = in.readLine();
+                in.close();
+
+                return input;
+            } catch (Exception e) {
+                this.exception = e;
+
+                return null;
+            }
+        }
+
+
+    }
+
+
+
     private ServiceConnection musicConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             //get the service into our variable from the binder
             musicService = binder.getService();
             setSongTitle();
@@ -106,6 +197,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             musicBound = false;
         }
     };
+
     //Below are the methods used to control the media player
     @Override
     public void start() {
@@ -141,7 +233,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
     @Override
     public boolean isPlaying() {
-        if(musicService != null && musicBound)
+        if (musicService != null && musicBound)
             return musicService.isPng();
         return false;
     }
@@ -180,6 +272,32 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         musicService.playPrev();
 
         // controller.show(0);
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("MusicControl Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
     }
 
     /*private void setController() {
