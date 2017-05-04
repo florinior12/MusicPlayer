@@ -39,6 +39,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
     private Intent playIntent;
     private boolean paused = false;
     private TextView songTitle;
+    private TextView lyrics;
     private ArrayList<Song> songs;
 
 
@@ -76,6 +77,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         Button nextButton = (Button) findViewById(R.id.nextButton);
         Button prevButton = (Button) findViewById(R.id.prevButton);
         Button pauseButton = (Button) findViewById(R.id.pause);
+        lyrics = (TextView) findViewById(R.id.TEXT_STATUS_ID);
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,8 +124,12 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.v("---setSongTitle", lyrics);
+        //Log.v("---setSongTitle", lyrics);
 
+    }
+
+    private void setLyrics(String s) {
+        lyrics.setText(s);
     }
 
 
@@ -174,7 +180,8 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
         @Override
         protected void onPostExecute(String s) {
-
+            setLyrics(s);
+            dialog.dismiss();
         }
     }
 
