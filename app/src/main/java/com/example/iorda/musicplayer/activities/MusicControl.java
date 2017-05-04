@@ -1,5 +1,6 @@
 package com.example.iorda.musicplayer.activities;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -117,19 +118,17 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         songTitle.setText(currentSong.getmArtistName() + " - " + currentSong.getmSongName());
         String lyrics = null;
         try {
-            lyrics = getLyrics(currentSong.getmArtistName(), currentSong.getmSongName());
+            getResponse(currentSong.getmArtistName(), currentSong.getmSongName());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         Log.v("---setSongTitle", lyrics);
-
-
-
 
     }
 
-    public String getLyrics(String artist, String track) throws IOException {
+
+
+    public void getResponse(String artist, String track) throws IOException {
         final String API_KEY = "94315e4b34c8e989919c728d44ee76a8";
         artist = artist.replaceAll(" ", "%20").toLowerCase();
         track = track.replaceAll(" ", "%20").toLowerCase();
@@ -137,16 +136,8 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
 
         UrlAsync urlAsync = new UrlAsync();
-        String response = null;
-        try {
-            response = urlAsync.execute(myUrl).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        Log.v("---getLyrics", response);
-        return response;
+        urlAsync.execute(myUrl);
+
 
     }
 
@@ -154,7 +145,12 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
         private Exception exception;
         private String input = null;
+        private final ProgressDialog dialog = new ProgressDialog(MusicControl.this);
 
+        protected void onPreExecute() {
+            this.dialog.setMessage("Processing...");
+            this.dialog.show();
+        }
         protected String doInBackground(String... url) {
             try {
 
@@ -176,7 +172,10 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             }
         }
 
+        @Override
+        protected void onPostExecute(String s) {
 
+        }
     }
 
 
