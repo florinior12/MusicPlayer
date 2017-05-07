@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.MediaController;
 import android.widget.TextView;
 
@@ -25,22 +26,42 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.net.*;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
+
 
 public class MusicControl extends AppCompatActivity implements MediaController.MediaPlayerControl {
+    private final String API_KEY = "94315e4b34c8e989919c728d44ee76a8";
+
+    private ImageButton pauseButton;
+    private ImageButton nextButton, prevButton;
+
 
     private MusicService musicService;
     private boolean musicBound = false;
     private Intent playIntent;
     private boolean paused = false;
-    private TextView songTitle;
-    private TextView lyrics;
+    private TextView songTitle, artistName;
+    private TextView lyricsView;
     private ArrayList<Song> songs;
+
+    private boolean playing;
 
 
     /**
@@ -73,16 +94,21 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         setContentView(R.layout.activity_media_controller);
 
         songs = (ArrayList<Song>) getIntent().getSerializableExtra("songs");
+        playing = (boolean) getIntent().getSerializableExtra("playing");
 
-        Button nextButton = (Button) findViewById(R.id.nextButton);
-        Button prevButton = (Button) findViewById(R.id.prevButton);
-        Button pauseButton = (Button) findViewById(R.id.pause);
-        lyrics = (TextView) findViewById(R.id.TEXT_STATUS_ID);
+
+        nextButton = (ImageButton) findViewById(R.id.nextButton);
+        prevButton = (ImageButton) findViewById(R.id.prevButton);
+        pauseButton = (ImageButton) findViewById(R.id.pause);
+        lyricsView = (TextView) findViewById(R.id.TEXT_STATUS_ID);
 
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                v.setPressed(true);
                 playNext();
+                Log.v("---Next", playing + "");
+
                 setSongTitle();
             }
         });
@@ -97,6 +123,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                v.setPressed(true);
                 if (!paused) {
                     pause();
                     paused = true;
@@ -117,37 +144,45 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
         Song currentSong = songs.get(musicService.getSongPosition());
         songTitle = (TextView) findViewById(R.id.songTitle);
-        songTitle.setText(currentSong.getmArtistName() + " - " + currentSong.getmSongName());
-        String lyrics = null;
-        try {
-            getResponse(currentSong.getmArtistName(), currentSong.getmSongName());
-        } catch (IOException e) {
-            e.printStackTrace();
+        songTitle.setText(currentSong.getmSongName());
+        artistName = (TextView) findViewById(R.id.artistName);
+        artistName.setText(currentSong.getmArtistName());
+        if (musicService.getLyrics() == null) {
+            try {
+                getResponse(currentSong.getmArtistName(), currentSong.getmSongName());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            lyricsView.setText(musicService.getLyrics());
         }
         //Log.v("---setSongTitle", lyrics);
 
     }
 
-    private void setLyrics(String s) {
-        lyrics.setText(s);
-    }
+
 
 
 
     public void getResponse(String artist, String track) throws IOException {
-        final String API_KEY = "94315e4b34c8e989919c728d44ee76a8";
-        artist = artist.replaceAll(" ", "%20").toLowerCase();
-        track = track.replaceAll(" ", "%20").toLowerCase();
+        artist = deAccent(artist);
+        track = deAccent(track);
 
-        String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
+        artist = artist.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
+        track = track.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
 
-        UrlAsync urlAsync = new UrlAsync();
-        urlAsync.execute(myUrl);
+
+
+        //String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
+        String myUrl = "http://www.songlyrics.com/" + artist + "/" + track + "-lyrics/";
+        Log.v("---getResponse", myUrl);
+        LyricsGet getLyrics = new LyricsGet();
+        getLyrics.execute(myUrl);
 
 
     }
 
-    private class UrlAsync extends AsyncTask<String, Void, String> {
+    private class LyricsGet extends AsyncTask<String, Void, List<String> > {
 
         private Exception exception;
         private String input = null;
@@ -157,8 +192,33 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             this.dialog.setMessage("Processing...");
             this.dialog.show();
         }
-        protected String doInBackground(String... url) {
+        protected List<String>  doInBackground(String... url) {
+
+            List<String> lyrics= new ArrayList<String>();
+
+            Document doc = null;
             try {
+                doc = Jsoup.connect(url[0]).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (doc!=null) {
+                Element p = doc.select("p.songLyricsV14").get(0);
+                for (Node e : p.childNodes()) {
+                    if (e instanceof TextNode) {
+                        lyrics.add(((TextNode) e).getWholeText());
+                    }
+                }
+                //Log.v("---Async",lyrics.get(0) + lyrics.size());
+                return lyrics;
+            }
+            else {
+                lyrics.add("No lyrics found :(");
+                return lyrics;
+            }
+
+    /*        try {
+
 
                 Log.v("---ASYNC---", "It's doing !" + url[0]);
 
@@ -168,19 +228,80 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
                                 musix.openStream()));
 
                 input = in.readLine();
+                Log.v("---ASYNC Input", input);
                 in.close();
-
-                return input;
             } catch (Exception e) {
                 this.exception = e;
 
                 return null;
             }
+            JSONObject object = null;
+
+            int track_id = 0;
+
+            try {
+                object = new JSONObject(input.substring(input.indexOf("{"), input.lastIndexOf("}") + 1));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                track_id =  object.getJSONObject("message").getJSONObject("body").getJSONObject("track").getInt("track_id");
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+            String lyricsGet = "https://api.musixmatch.com/ws/1.1/track.lyrics.get?format=jsonp&callback=callback&track_id=" + track_id + "&apikey=" + API_KEY;
+            URL lyricsURL = null;
+            String lyricsResponse = "";
+            try {
+                lyricsURL = new URL(lyricsGet);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(
+                                lyricsURL.openStream())
+                );
+                lyricsResponse = in.readLine();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            JSONObject lyricsObject = null;
+
+            String lyricsParsed;
+
+            try {
+                lyricsObject = new JSONObject(lyricsResponse.substring(lyricsResponse.indexOf("{"), lyricsResponse.lastIndexOf("}") + 1));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                lyricsParsed =  lyricsObject.getJSONObject("message").getJSONObject("body").getJSONObject("lyrics").getString("lyrics_body");
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
+            return lyricsParsed;
+*/
+
+
+
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            setLyrics(s);
+        protected void onPostExecute(List<String>  s) {
+            String text = "";
+            for(String string : s) {
+                text += string;
+            }
+
+            musicService.setLyrics(text);
+            lyricsView.setText(text);
             dialog.dismiss();
         }
     }
@@ -193,6 +314,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             //get the service into our variable from the binder
             musicService = binder.getService();
+            Log.v("---Serv", playing + "");
             setSongTitle();
             //the music is now bound to the service
             musicBound = true;
@@ -304,6 +426,13 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(client, getIndexApiAction());
         client.disconnect();
+    }
+
+
+    public String deAccent(String str) {
+        String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 
     /*private void setController() {

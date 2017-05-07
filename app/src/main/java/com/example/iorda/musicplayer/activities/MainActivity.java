@@ -9,6 +9,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import com.example.iorda.musicplayer.adapters.SongListAdapter;
 import com.example.iorda.musicplayer.heper.Song;
 import com.example.iorda.musicplayer.services.MusicService;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,11 +50,12 @@ public class MainActivity extends AppCompatActivity  {
 
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        intent = new Intent(this,MusicControl.class);
+
         init();
 
     }
@@ -68,6 +72,7 @@ public class MainActivity extends AppCompatActivity  {
         if (playIntent == null) {   //if there is no intent
             //create an intent between the activity_main activity and the service which plays music
             playIntent = new Intent(this, MusicService.class);
+
             //bindService is a method provided by android used to bind an intent to a service using a service connection
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
@@ -138,7 +143,7 @@ public class MainActivity extends AppCompatActivity  {
     private void init() {
         getActionBar();
         mListSongs = (ListView) findViewById(R.id.lvSongs);
-
+        intent = new Intent(this,MusicControl.class);
 
         songsList = listAllSongs();
         Collections.sort(songsList, new Comparator<Song>() {
@@ -151,6 +156,7 @@ public class MainActivity extends AppCompatActivity  {
 
         mAdapterListFile = new SongListAdapter(this,songsList);
         mListSongs.setAdapter(mAdapterListFile);
+
         mListSongs.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -167,9 +173,14 @@ public class MainActivity extends AppCompatActivity  {
                         playbackPaused = false;
                     }
                     view.setActivated(true);
+                    intent.putExtra("playing", false);
+                    intent.putExtra("songs",songsList);
+                    startActivity(intent);
                 }
-                intent.putExtra("songs",songsList);
-                startActivity(intent);
+                else {
+                    intent.putExtra("playing", true);
+                    startActivity(intent);
+                }
 
             }
         });
@@ -180,6 +191,8 @@ public class MainActivity extends AppCompatActivity  {
 
 
     }
+
+
 
     private ArrayList<Song> listAllSongs() {
         Cursor cursor;

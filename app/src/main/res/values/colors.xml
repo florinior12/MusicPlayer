@@ -3,14 +3,14 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="black">#000000</color>
+    <color name="black">#b1000000</color>
+    <color name ="blackL">#c1000000</color>
     <color name="songSelected">#91a6c9</color>
-
+    <color name="none">#00ffffff</color>
     <color name="songTitle">#bdbdbd</color>
     <color name="songArtist">#8afffdfd</color>
-    <color name="WHITE">#FFFFFF</color>
-
-
+    <color name="WHITE">#ffffff</color>
+    <color name="light_white">#b2ffffff</color>
 
 
 </resources>

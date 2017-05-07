@@ -41,6 +41,7 @@ public class MusicService extends Service implements
     private Song playSong = null;
     private String songTitle = "";
     private static final int NOTIFY_ID = 1;
+    public String lyrics = null;
 
     public IBinder onBind(Intent intent) {
         return musicBind;
@@ -79,7 +80,7 @@ public class MusicService extends Service implements
     }
 
     public void playSong() {
-
+        lyrics = null;
         Log.v("!!!!!!!playSong method", songPosn + " pos");
 
        /* if (playSong != null) { //here playSong is the previous song - if it's null we reset it to default color
@@ -217,6 +218,14 @@ public class MusicService extends Service implements
             songPosn = 0;   //if the position is larger than size of the songs, we go to the first song
 
         playSong();
+    }
+
+    public String getLyrics() {
+        return lyrics;
+    }
+
+    public void setLyrics(String lyrics) {
+        this.lyrics = lyrics;
     }
 
 }

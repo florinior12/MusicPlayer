@@ -3,91 +3,152 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_media_controller"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.iorda.musicplayer.activities.MusicControl">
 
-    <LinearLayout
-        android:orientation="vertical"
+    tools:context="com.example.iorda.musicplayer.activities.MusicControl"
+    android:background="@color/none">
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:weightSum="1">
-        <RelativeLayout
+        android:background="@color/blackL">
 
-            android:id="@+id/relativelayout"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.7">
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:srcCompat="@drawable/default_clipart"
-            android:id="@+id/imageView"
-             />
-            <ScrollView
-                android:id="@+id/SCROLLER_ID"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="vertical"
-                android:fillViewport="true"
-                >
-
-                <TextView
-                    android:id="@+id/TEXT_STATUS_ID"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
-                    android:text="@string/lorem"/>
-            </ScrollView>
-        </RelativeLayout>
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.3">
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:weightSum="1">
+            <RelativeLayout
 
-            <TextView
-                android:text="TextView"
+                android:id="@+id/relativelayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/songTitle" />
-
-            <LinearLayout
-                android:orientation="horizontal"
+                android:layout_height="0dp"
+                android:layout_weight="0.7">
+            <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:weightSum="1.2">
-
-                <Button
-                    android:text="PREV"
-                    android:layout_width="0dp"
+                app:srcCompat="@drawable/default_clipart"
+                android:id="@+id/imageView"
+                android:alpha="0.6" />
+                <ScrollView
+                    android:id="@+id/SCROLLER_ID"
+                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/prevButton"
-                    android:layout_weight="0.4" />
+                    android:scrollbars="vertical"
+                    android:fillViewport="true"
+                    >
 
-                <Button
-                    android:text="||"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/pause"
-                    android:layout_weight="0.4" />
+                    <TextView
+                        android:id="@+id/TEXT_STATUS_ID"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1.0"
+                        android:background="@color/blackL"
+                        android:textColor="@color/WHITE"
+                        android:text="@string/lorem"/>
+                </ScrollView>
+            </RelativeLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.3"
+                android:weightSum="1">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:id="@+id/songTitle"
+                    android:layout_weight="0.15"
+                    android:text="@string/app_name"
+                    android:textColor="@color/WHITE"
+                    android:textSize="20sp"
+                    style="@android:style/Widget.TextView.PopupMenu"
+                    android:paddingLeft="14dp" />
+
+                <TextView
+                    android:text="Artist"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:id="@+id/artistName"
+                    android:layout_weight="0.15"
+                    android:textColor="@color/light_white"
+                    android:paddingLeft="14dp"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.7"
+                    android:weightSum="1.2"
+                    android:gravity="center_vertical">
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.4">
+
+                        <ImageButton
+
+                            android:layout_gravity="right|center_vertical"
+                            android:scaleType="fitCenter"
+                            android:adjustViewBounds="true"
+                            android:layout_width="wrap_content"
+                            android:id="@+id/prevButton"
+                            android:layout_weight="0.4"
+                            android:elevation="1dp"
+                            android:layout_height="wrap_content"
+                            app:srcCompat="@drawable/prev_bg"
+                            android:background="@color/none" />
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.4">
+
+                        <ImageButton
+                            android:layout_gravity="center"
+                            android:scaleType="fitCenter"
+                            android:adjustViewBounds="true"
+                            android:layout_width="wrap_content"
+                            android:id="@+id/pause"
+                            android:layout_weight="0.4"
+                            android:elevation="1dp"
+                            android:layout_height="wrap_content"
+                            app:srcCompat="@drawable/pause_bg"
+                            android:background="@color/none" />
+                    </FrameLayout>
 
 
-                <Button
-                    android:text="NEXT"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/nextButton"
-                    android:layout_weight="0.4" />
+
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.4">
+
+                        <ImageButton
+                            android:layout_gravity="center_vertical"
+                            android:scaleType="fitCenter"
+                            android:adjustViewBounds="true"
+                            android:layout_width="wrap_content"
+                            android:id="@+id/nextButton"
+                            android:layout_weight="0.4"
+                            android:elevation="1dp"
+                            android:layout_height="wrap_content"
+                            app:srcCompat="@drawable/next_bg"
+                            android:background="@color/none" />
+                    </FrameLayout>
+                </LinearLayout>
+
             </LinearLayout>
-
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
+
 </RelativeLayout>
