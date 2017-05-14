@@ -4,7 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="black">#b1000000</color>
-    <color name ="blackL">#c1000000</color>
+    <color name ="blackL">#94000000</color>
     <color name="songSelected">#91a6c9</color>
     <color name="none">#00ffffff</color>
     <color name="songTitle">#bdbdbd</color>

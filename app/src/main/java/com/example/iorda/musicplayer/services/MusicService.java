@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -42,6 +43,8 @@ public class MusicService extends Service implements
     private String songTitle = "";
     private static final int NOTIFY_ID = 1;
     public String lyrics = null;
+
+    private Bitmap image;
 
     public IBinder onBind(Intent intent) {
         return musicBind;
@@ -131,7 +134,7 @@ public class MusicService extends Service implements
         Notification.Builder builder = new Notification.Builder(this);
 
         builder.setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.default_clipart)
+                .setSmallIcon(R.mipmap.launcher)
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
@@ -226,6 +229,14 @@ public class MusicService extends Service implements
 
     public void setLyrics(String lyrics) {
         this.lyrics = lyrics;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap b) {
+        image = b;
     }
 
 }

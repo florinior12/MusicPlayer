@@ -39,9 +39,9 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity  {
 
     private ArrayList<Song> songsList;
-    private SongListAdapter mAdapterListFile;
+    public SongListAdapter mAdapterListFile;
     private String[] STAR = {"*"};
-    private ListView mListSongs;
+    public ListView mListSongs;
     private Intent intent;
     private MusicService musicService;
     private Intent playIntent;

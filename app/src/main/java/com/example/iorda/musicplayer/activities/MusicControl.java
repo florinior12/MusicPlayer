@@ -5,6 +5,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.IBinder;
@@ -14,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
 
@@ -26,6 +30,7 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -37,6 +42,7 @@ import org.jsoup.nodes.TextNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -47,7 +53,7 @@ import java.util.regex.Pattern;
 
 
 public class MusicControl extends AppCompatActivity implements MediaController.MediaPlayerControl {
-    private final String API_KEY = "94315e4b34c8e989919c728d44ee76a8";
+    private final String API_KEY = "89c6b2bc98f70c1741f0b107a06da1c4";
 
     private ImageButton pauseButton;
     private ImageButton nextButton, prevButton;
@@ -59,7 +65,9 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
     private boolean paused = false;
     private TextView songTitle, artistName;
     private TextView lyricsView;
+    private ImageView imageView;
     private ArrayList<Song> songs;
+
 
     private boolean playing;
 
@@ -108,26 +116,32 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
                 v.setPressed(true);
                 playNext();
                 Log.v("---Next", playing + "");
-
+                pauseButton.setActivated(false);
                 setSongTitle();
+                paused = false;
             }
         });
 
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                v.setPressed(true);
+                pauseButton.setActivated(false);
                 playPrev();
                 setSongTitle();
+                paused = false;
             }
         });
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                v.setPressed(true);
+
                 if (!paused) {
+                    v.setActivated(true);
                     pause();
                     paused = true;
                 } else {
+                    v.setActivated(false);
                     start();
                     paused = false;
                 }
@@ -146,6 +160,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         songTitle = (TextView) findViewById(R.id.songTitle);
         songTitle.setText(currentSong.getmSongName());
         artistName = (TextView) findViewById(R.id.artistName);
+        imageView = (ImageView) findViewById(R.id.imageView);
         artistName.setText(currentSong.getmArtistName());
         if (musicService.getLyrics() == null) {
             try {
@@ -155,6 +170,8 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             }
         } else {
             lyricsView.setText(musicService.getLyrics());
+            imageView.setImageBitmap(musicService.getImage());
+
         }
         //Log.v("---setSongTitle", lyrics);
 
@@ -167,7 +184,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
     public void getResponse(String artist, String track) throws IOException {
         artist = deAccent(artist);
         track = deAccent(track);
-
+        //get lyrics!
         artist = artist.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
         track = track.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
 
@@ -176,8 +193,92 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         //String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
         String myUrl = "http://www.songlyrics.com/" + artist + "/" + track + "-lyrics/";
         Log.v("---getResponse", myUrl);
+
         LyricsGet getLyrics = new LyricsGet();
         getLyrics.execute(myUrl);
+
+        //get album art!
+        artist = artist.replaceAll("-", "%20");
+        track = track.replaceAll("-", "%20");
+        myUrl = "http://ws.audioscrobbler.com/2.0/?method=track.search&track=" + track + "&artist=" + artist + "&api_key=" + API_KEY + "&format=json";
+
+        ArtGet getArt = new ArtGet();
+        getArt.execute(myUrl);
+
+
+    }
+
+    private class ArtGet extends AsyncTask<String, Void, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(String... url) {
+            URL myurl = null;
+            try {
+                myurl = new URL(url[0]);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            String input = null;
+            BufferedReader in = null;
+            try {
+                in = new BufferedReader(
+                        new InputStreamReader(
+                                myurl.openStream()));
+                input = in.readLine();
+                //Log.v("---ASYNC Input", input);
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            Log.v("----ARTGET", input);
+            JSONObject object = null;
+
+            String art_url = null;
+
+            try {
+                object = new JSONObject(input.substring(input.indexOf("{"), input.lastIndexOf("}") + 1));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                JSONArray tracks  =  object.getJSONObject("results").getJSONObject("trackmatches").getJSONArray("track");
+                if (tracks.length()==0) {
+                    return null;
+                }   else {
+                    JSONArray images = ((JSONObject) tracks.get(0)).getJSONArray("image");
+                    art_url = ((JSONObject) images.get(images.length() - 1)).getString("#text");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.v("----ARTGET", art_url);
+
+
+            Bitmap bitmap = null;
+            try {
+                bitmap = BitmapFactory.decodeStream((InputStream)new URL(art_url).getContent());
+            }
+            catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap b) {
+            if (b!=null) {
+                imageView.setImageBitmap(b);
+                musicService.setImage(b);
+            }
+        }
+
+
 
 
     }
@@ -306,7 +407,12 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        if(musicBound) unbindService(musicConnection);
+        super.onDestroy();
 
+    }
 
     private ServiceConnection musicConnection = new ServiceConnection() {
         @Override
