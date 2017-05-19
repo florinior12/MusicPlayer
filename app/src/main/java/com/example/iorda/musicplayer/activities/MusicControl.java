@@ -115,7 +115,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             public void onClick(View v) {
                 v.setPressed(true);
                 playNext();
-                Log.v("---Next", playing + "");
+
                 pauseButton.setActivated(false);
                 setSongTitle();
                 paused = false;
@@ -230,44 +230,46 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (input!=null) {
 
 
-            Log.v("----ARTGET", input);
-            JSONObject object = null;
+                Log.v("----ARTGET", input);
+                JSONObject object = null;
 
-            String art_url = null;
+                String art_url = null;
 
-            try {
-                object = new JSONObject(input.substring(input.indexOf("{"), input.lastIndexOf("}") + 1));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                JSONArray tracks  =  object.getJSONObject("results").getJSONObject("trackmatches").getJSONArray("track");
-                if (tracks.length()==0) {
-                    return null;
-                }   else {
-                    JSONArray images = ((JSONObject) tracks.get(0)).getJSONArray("image");
-                    art_url = ((JSONObject) images.get(images.length() - 1)).getString("#text");
+                try {
+                    object = new JSONObject(input.substring(input.indexOf("{"), input.lastIndexOf("}") + 1));
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
 
-            Log.v("----ARTGET", art_url);
+                try {
+                    JSONArray tracks = object.getJSONObject("results").getJSONObject("trackmatches").getJSONArray("track");
+                    if (tracks.length() == 0) {
+                        return null;
+                    } else {
+                        JSONArray images = ((JSONObject) tracks.get(0)).getJSONArray("image");
+                        art_url = ((JSONObject) images.get(images.length() - 1)).getString("#text");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                Log.v("----ARTGET", art_url);
 
 
-            Bitmap bitmap = null;
-            try {
-                bitmap = BitmapFactory.decodeStream((InputStream)new URL(art_url).getContent());
-            }
-            catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return bitmap;
+                Bitmap bitmap = null;
+                try {
+                    bitmap = BitmapFactory.decodeStream((InputStream) new URL(art_url).getContent());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return bitmap;
+            } else return null;
+
         }
 
         @Override
