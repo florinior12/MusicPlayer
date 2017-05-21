@@ -60,11 +60,11 @@ public class MainActivity extends AppCompatActivity  {
 
     }
 
-    public boolean onCreateOptionsMenu(Menu menu) {
+    /*public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_main, menu);
         return true;
-    }
+    }*/
 
     //when the activity_main activity starts, it establishes a connection to the music service using an intent
     protected void onStart() {
@@ -240,22 +240,7 @@ public class MainActivity extends AppCompatActivity  {
         return null;
     }
 
-    //gets the position of a chosen song and plays it
-    /*public void songPicked(View view) {
 
-        musicService.setSong(Integer.parseInt(view.getTag().toString()));
-        musicService.playSong();
-
-        if(playbackPaused) {
-            //setController();
-            playbackPaused = false;
-        }
-        view.setActivated(true);
-        controller.show();
-        setController();
-
-
-    }*/
 
     private static boolean sdIsPresent() {
         if (android.os.Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))

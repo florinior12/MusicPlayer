@@ -178,16 +178,12 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
     }
 
 
-
-
-
     public void getResponse(String artist, String track) throws IOException {
         artist = deAccent(artist);
         track = deAccent(track);
         //get lyrics!
         artist = artist.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
         track = track.replaceAll(" ", "-").toLowerCase().replaceAll("/", "");
-
 
 
         //String myUrl = "https://api.musixmatch.com/ws/1.1/matcher.track.get?format=jsonp&callback=callback&q_artist=" + artist + "&q_track=" + track + "&apikey=" + API_KEY;
@@ -230,7 +226,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (input!=null) {
+            if (input != null) {
 
 
                 Log.v("----ARTGET", input);
@@ -274,18 +270,16 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
         @Override
         protected void onPostExecute(Bitmap b) {
-            if (b!=null) {
+            if (b != null) {
                 imageView.setImageBitmap(b);
                 musicService.setImage(b);
             }
         }
 
 
-
-
     }
 
-    private class LyricsGet extends AsyncTask<String, Void, List<String> > {
+    private class LyricsGet extends AsyncTask<String, Void, List<String>> {
 
         private Exception exception;
         private String input = null;
@@ -295,9 +289,10 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             this.dialog.setMessage("Processing...");
             this.dialog.show();
         }
-        protected List<String>  doInBackground(String... url) {
 
-            List<String> lyrics= new ArrayList<String>();
+        protected List<String> doInBackground(String... url) {
+
+            List<String> lyrics = new ArrayList<String>();
 
             Document doc = null;
             try {
@@ -305,7 +300,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (doc!=null) {
+            if (doc != null) {
                 Element p = doc.select("p.songLyricsV14").get(0);
                 for (Node e : p.childNodes()) {
                     if (e instanceof TextNode) {
@@ -314,92 +309,18 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
                 }
                 //Log.v("---Async",lyrics.get(0) + lyrics.size());
                 return lyrics;
-            }
-            else {
+            } else {
                 lyrics.add("No lyrics found :(");
                 return lyrics;
             }
-
-    /*        try {
-
-
-                Log.v("---ASYNC---", "It's doing !" + url[0]);
-
-                URL musix = new URL(url[0]);
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(
-                                musix.openStream()));
-
-                input = in.readLine();
-                Log.v("---ASYNC Input", input);
-                in.close();
-            } catch (Exception e) {
-                this.exception = e;
-
-                return null;
-            }
-            JSONObject object = null;
-
-            int track_id = 0;
-
-            try {
-                object = new JSONObject(input.substring(input.indexOf("{"), input.lastIndexOf("}") + 1));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                track_id =  object.getJSONObject("message").getJSONObject("body").getJSONObject("track").getInt("track_id");
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return null;
-            }
-
-            String lyricsGet = "https://api.musixmatch.com/ws/1.1/track.lyrics.get?format=jsonp&callback=callback&track_id=" + track_id + "&apikey=" + API_KEY;
-            URL lyricsURL = null;
-            String lyricsResponse = "";
-            try {
-                lyricsURL = new URL(lyricsGet);
-
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(
-                                lyricsURL.openStream())
-                );
-                lyricsResponse = in.readLine();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            JSONObject lyricsObject = null;
-
-            String lyricsParsed;
-
-            try {
-                lyricsObject = new JSONObject(lyricsResponse.substring(lyricsResponse.indexOf("{"), lyricsResponse.lastIndexOf("}") + 1));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                lyricsParsed =  lyricsObject.getJSONObject("message").getJSONObject("body").getJSONObject("lyrics").getString("lyrics_body");
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return null;
-            }
-            return lyricsParsed;
-*/
-
 
 
         }
 
         @Override
-        protected void onPostExecute(List<String>  s) {
+        protected void onPostExecute(List<String> s) {
             String text = "";
-            for(String string : s) {
+            for (String string : s) {
                 text += string;
             }
 
@@ -411,7 +332,7 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
 
     @Override
     protected void onDestroy() {
-        if(musicBound) unbindService(musicConnection);
+        if (musicBound) unbindService(musicConnection);
         super.onDestroy();
 
     }
@@ -536,40 +457,12 @@ public class MusicControl extends AppCompatActivity implements MediaController.M
         client.disconnect();
     }
 
-
+    //get rid of diacritics
     public String deAccent(String str) {
         String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 
-    /*private void setController() {
-        controller = new MusicController(this);
-        controller.setPrevNextListeners(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playNext();
-            }
-        }, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playPrev();
-            }
-        });
 
-        controller.setMediaPlayer(this);
-        controller.setAnchorView(findViewById(R.id.lvSongs));
-        controller.setEnabled(true);
-
-    }
-
-    public class MusicController extends MediaController {
-        public MusicController(Context c) {
-            super(c);
-        }
-
-        public void hide() {
-
-        }
-    }*/
 }
